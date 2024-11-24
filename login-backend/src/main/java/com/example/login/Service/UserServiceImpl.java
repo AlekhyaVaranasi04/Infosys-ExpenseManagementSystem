@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -25,14 +24,20 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    EmailService emailService;
+    private EmailService emailService;
+
+    private static final String NUMBERS = "0123456789";
+    private static final SecureRandom random = new SecureRandom();
 
     @Override
     @Transactional
     public String registerUser(User user) {
-        Optional<User> exist = userRepository.findByUsername(user.getUsername());
-        if(exist.isPresent()) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
+        }
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists");
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Encrypt the password
@@ -40,8 +45,11 @@ public class UserServiceImpl implements UserService {
         user.setVerificationCode(verificationCode);
         userRepository.save(user);
 
-
-        emailService.sendEmail(user.getEmail(), "Email Verification", "Your OTP is: " + verificationCode + "\n Enter the OTP in the application to verify email.");
+        emailService.sendEmail(
+                user.getEmail(),
+                "Email Verification",
+                "Your OTP is: " + verificationCode + "\nEnter the OTP in the application to verify your email."
+        );
 
         return "Registration successful! Please check your email to verify your account.";
     }
@@ -51,32 +59,24 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
-        if(!existingUser.isEnabled()) {
+        if (!existingUser.isEnabled()) {
             throw new RuntimeException("Verify your email before logging in");
         }
 
-        if(passwordEncoder.matches(password, existingUser.getPassword())) {
+        if (passwordEncoder.matches(password, existingUser.getPassword())) {
             return true;
-        }
-        else {
-            throw new RuntimeException("Enter valid password");
+        } else {
+            throw new RuntimeException("Invalid password");
         }
     }
 
     @Override
     public boolean verifyEmail(String verificationCode, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        User user;
-
-        if(userOpt.isPresent()) {
-            user = userOpt.get();
-        }
-        else {
-            throw new UsernameNotFoundException("Username not found");
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
         if (!verificationCode.equals(user.getVerificationCode())) {
-            throw new RuntimeException("Enter valid OTP");
+            throw new RuntimeException("Invalid OTP");
         }
 
         user.setEnabled(true);
@@ -87,47 +87,47 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean sendResetPasswordToken(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            String resetPasswordToken = generateOTP();
-            user.setResetPasswordToken(resetPasswordToken);
-            userRepository.save(user);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Invalid email"));
 
-            emailService.sendEmail(user.getEmail(), "Password Reset Request", "Give the otp and new password: " + resetPasswordToken);
+        String resetPasswordToken = generateOTP();
+        user.setResetPasswordToken(resetPasswordToken);
+        userRepository.save(user);
 
-            return true;
-        } else {
-            throw new RuntimeException("Invalid email");
-        }
+        emailService.sendEmail(
+                user.getEmail(),
+                "Password Reset Request",
+                "Your OTP for password reset is: " + resetPasswordToken
+        );
+
+        return true;
     }
 
     @Override
     public boolean resetPassword(String email, String token, String newPassword) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        User user = userOpt.get();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found"));
 
-        if(user.getResetPasswordToken().equals(token)) {
-            user.setPassword(passwordEncoder.encode(newPassword));
-            user.setResetPasswordToken(null);
-            userRepository.save(user);
-            return true;
+        if (!token.equals(user.getResetPasswordToken())) {
+            throw new RuntimeException("Invalid OTP");
         }
-        else {
-            throw new RuntimeException("Enter valid OTP");
-        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetPasswordToken(null); // Clear the token after successful reset
+        userRepository.save(user);
+        return true;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),
-                user.getPassword(), new ArrayList<>());
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                new ArrayList<>()
+        );
     }
-
-    private static final String NUMBERS = "0123456789";
-    private static final SecureRandom random = new SecureRandom();
 
     public String generateOTP() {
         StringBuilder otp = new StringBuilder(4);

@@ -23,8 +23,7 @@ public class AuthController {
         try {
             userService.registerUser(user);
             return ResponseEntity.ok("User registered successfully. Please verify your email.");
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -32,7 +31,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@Valid @RequestBody Map<String, String> loginDetails) {
         try {
-
             String username = loginDetails.get("username");
             String password = loginDetails.get("password");
 
@@ -42,45 +40,43 @@ public class AuthController {
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials.");
             }
-
-        }
-        catch (UsernameNotFoundException e) {
-            // Handle the case where the provided role is not valid
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-        catch (RuntimeException e) {
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<String> verifyEmail(@RequestParam("code") String verificationCode, @RequestParam("username") String username) {
+    public ResponseEntity<String> verifyEmail(
+            @RequestParam("code") String verificationCode,
+            @RequestParam("username") String username) {
         try {
-            if(userService.verifyEmail(verificationCode, username)) {
-                return ResponseEntity.ok("Email verified Successfully");
+            boolean verified = userService.verifyEmail(verificationCode, username);
+            if (verified) {
+                return ResponseEntity.ok("Email verified successfully.");
+            } else {
+                return ResponseEntity.badRequest().body("Invalid verification code or username.");
             }
-            else {
-                return ResponseEntity.badRequest().body("Enter valid credentials");
-            }
-        }
-        catch (UsernameNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-        catch (RuntimeException e) {
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/reset-password/confirm")
-    public ResponseEntity<String> resetPassword(@RequestParam("email") String email, @RequestParam("token") String token, @RequestParam("newPassword") String newPassword) {
+    public ResponseEntity<String> resetPassword(
+            @RequestParam("email") String email,
+            @RequestParam("token") String token,
+            @RequestParam("newPassword") String newPassword) {
         try {
-            if(userService.resetPassword(email, token, newPassword)) {
-                return ResponseEntity.ok("Your password has been successfully changes");
+            boolean resetSuccessful = userService.resetPassword(email, token, newPassword);
+            if (resetSuccessful) {
+                return ResponseEntity.ok("Your password has been successfully changed.");
             }
-
-            return ResponseEntity.badRequest().body("Enter valid credentials");
-        }
-        catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Invalid email, token, or password.");
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -88,13 +84,12 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> sendResetPasswordToken(@RequestParam("email") String email) {
         try {
-           if(userService.sendResetPasswordToken(email)) {
-               return ResponseEntity.ok("Reset password OTP has been successfully sent to your email");
-           }
-
-           return ResponseEntity.badRequest().body("Enter valid credentials");
-        }
-        catch (RuntimeException e) {
+            boolean tokenSent = userService.sendResetPasswordToken(email);
+            if (tokenSent) {
+                return ResponseEntity.ok("Reset password token has been successfully sent to your email.");
+            }
+            return ResponseEntity.badRequest().body("Invalid email address.");
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
