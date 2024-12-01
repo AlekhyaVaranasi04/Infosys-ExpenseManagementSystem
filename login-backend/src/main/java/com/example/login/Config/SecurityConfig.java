@@ -18,6 +18,7 @@ public class SecurityConfig {
                         .frameOptions(frameOptions -> frameOptions.disable()) // Allow H2 console in dev mode
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        // Publicly accessible endpoints
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/verify-email",
@@ -25,7 +26,14 @@ public class SecurityConfig {
                                 "/api/auth/reset-password",
                                 "/api/auth/reset-password/confirm",
                                 "/h2-console/**"
-                        ).permitAll() // Publicly accessible endpoints
+                        ).permitAll()
+
+                        // Restricted endpoints for authenticated users only
+                        .requestMatchers(
+                                "/expenses/**",  // All expense-related operations
+                                "/categories/**" // All category-related operations
+                        ).hasRole("USER") // Allow only 'USER' role
+
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .formLogin(form -> form
