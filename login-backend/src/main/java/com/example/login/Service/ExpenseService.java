@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -30,6 +32,33 @@ public class ExpenseService {
     // Get expenses within a specific date range
     public List<Expense> getExpensesByDateRange(User user, LocalDate startDate, LocalDate endDate) {
         return expenseRepository.findByUserAndDateBetween(user, startDate, endDate);
+    }
+
+    // Get expenses for a specific day
+    public List<Expense> getExpensesForDay(User user, LocalDate date) {
+        return expenseRepository.findByUserAndDate(user, date);
+    }
+
+    // Get expenses grouped by date for a specific month
+    public Map<LocalDate, Double> getExpensesForMonth(User user, int year, int month) {
+        List<Expense> expenses = expenseRepository.findByUserAndMonth(user, year, month);
+        return expenses.stream()
+                .collect(Collectors.groupingBy(
+                        Expense::getDate,
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+    }
+
+    // Calculate total daily expenditure
+    public Double getDailyExpenditure(User user, LocalDate date) {
+        List<Expense> expenses = getExpensesForDay(user, date);
+        return expenses.stream().mapToDouble(Expense::getAmount).sum();
+    }
+
+    // Calculate total monthly expenditure
+    public Double getMonthlyExpenditure(User user, int year, int month) {
+        Map<LocalDate, Double> expenses = getExpensesForMonth(user, year, month);
+        return expenses.values().stream().mapToDouble(Double::doubleValue).sum();
     }
 
     // Delete an expense by ID

@@ -7,6 +7,7 @@ import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Profile from './components/Profile';
+import Dashboard from './components/Dashboard';
 
 function App() {
   return (
@@ -19,6 +20,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/dashboard"
+          element={localStorage.getItem("token") ? <Dashboard /> : <Login />}
+        />
       </Routes>
     </Router>
   );

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/expenses")
@@ -46,6 +47,52 @@ public class ExpenseController {
         User user = getUserFromPrincipal(principal);
         List<Expense> expenses = expenseService.getExpensesByDateRange(user, startDate, endDate);
         return ResponseEntity.ok(expenses);
+    }
+
+    // Get expenses for a specific day
+    @GetMapping("/by-day")
+    public ResponseEntity<List<Expense>> getExpensesByDay(
+            Principal principal,
+            @RequestParam LocalDate date) {
+        User user = getUserFromPrincipal(principal);
+        List<Expense> expenses = expenseService.getExpensesForDay(user, date);
+        return ResponseEntity.ok(expenses);
+    }
+
+    // Get monthly expense report
+    @GetMapping("/by-month")
+    public ResponseEntity<Map<LocalDate, Double>> getMonthlyExpenses(
+            Principal principal,
+            @RequestParam int year,
+            @RequestParam int month) {
+        User user = getUserFromPrincipal(principal);
+        Map<LocalDate, Double> monthlyExpenses = expenseService.getExpensesForMonth(user, year, month);
+        return ResponseEntity.ok(monthlyExpenses);
+    }
+
+    // Get remaining balance for the day
+    @GetMapping("/balance/day")
+    public ResponseEntity<Double> getRemainingBalanceForDay(
+            Principal principal,
+            @RequestParam LocalDate date,
+            @RequestParam Double income) {
+        User user = getUserFromPrincipal(principal);
+        Double dailyExpenditure = expenseService.getDailyExpenditure(user, date);
+        Double remainingBalance = income - dailyExpenditure;
+        return ResponseEntity.ok(remainingBalance);
+    }
+
+    // Get remaining balance for the month
+    @GetMapping("/balance/month")
+    public ResponseEntity<Double> getRemainingBalanceForMonth(
+            Principal principal,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam Double income) {
+        User user = getUserFromPrincipal(principal);
+        Double monthlyExpenditure = expenseService.getMonthlyExpenditure(user, year, month);
+        Double remainingBalance = income - monthlyExpenditure;
+        return ResponseEntity.ok(remainingBalance);
     }
 
     // Delete an expense

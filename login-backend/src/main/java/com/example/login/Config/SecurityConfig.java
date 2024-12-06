@@ -20,6 +20,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // Publicly accessible endpoints
                         .requestMatchers(
+                                "/register",
+                                "/login",
+                                "/forgot-password",
+                                "/reset-password",
                                 "/api/auth/register",
                                 "/api/auth/verify-email",
                                 "/api/auth/login",
@@ -37,15 +41,15 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .formLogin(form -> form
-                        .loginPage("/api/auth/login") // Custom login page (frontend or REST response)
+                        .loginPage("/login") // Custom login page
                         .loginProcessingUrl("/process-login") // Endpoint where login form is submitted
                         .defaultSuccessUrl("/dashboard", true) // Redirect on successful login
-                        .failureUrl("/api/auth/login?error=true") // Redirect on login failure
+                        .failureUrl("/login?error=true") // Redirect on login failure
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/api/auth/login?logout=true") // Redirect to login page after logout
+                        .logoutSuccessUrl("/login?logout=true") // Redirect to login page after logout
                         .invalidateHttpSession(true) // Clear session
                         .deleteCookies("JSESSIONID") // Remove authentication cookies
                 );
