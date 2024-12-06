@@ -1,12 +1,12 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import '../CSS/Profile.css';
+import React from "react";
 
-function Profile() {
+const Profile = () => {
   return (
-    <div className="profile-container">
+    <div>
+      <h2>Profile</h2>
+      <p>Manage your profile here.</p>
     </div>
   );
-}
+};
 
 export default Profile;

@@ -45,14 +45,14 @@ public class ExpenseService {
         return expenses.stream()
                 .collect(Collectors.groupingBy(
                         Expense::getDate,
-                        Collectors.summingDouble(Expense::getAmount)
+                        Collectors.summingDouble(expense -> expense.getAmount().doubleValue())
                 ));
     }
 
     // Calculate total daily expenditure
     public Double getDailyExpenditure(User user, LocalDate date) {
         List<Expense> expenses = getExpensesForDay(user, date);
-        return expenses.stream().mapToDouble(Expense::getAmount).sum();
+        return expenses.stream().mapToDouble(expense -> expense.getAmount().doubleValue()).sum();
     }
 
     // Calculate total monthly expenditure
