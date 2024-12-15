@@ -20,10 +20,12 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
-        <Route
+        {/* <Route
           path="/dashboard"
           element={localStorage.getItem("token") ? <Dashboard /> : <Login />}
-        />
+        /> */}
+                <Route path="/dashboard" element={<Dashboard />} />
+
       </Routes>
     </Router>
   );

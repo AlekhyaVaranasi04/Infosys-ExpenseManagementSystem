@@ -15,7 +15,7 @@ function Home() {
       <div className="relative flex flex-col justify-center items-center h-full px-4 ">
         {/* Hero Section */}
         <div className="text-left self-start ml-8">
-          <h1 className="text-5xl font-bold mb-4 text-black">Welcome to <span className='text-blue-500 text-7xl'>ExpenseTrack Pro</span></h1>
+          <h1 className="text-5xl font-bold mb-4 text-black">Welcome to <span className='text-blue-500 text-7xl'>ExpenseTrack <span className='text-orange-500 text-7xl'>Pro</span></span></h1>
           <p className="text-xl mb-6 text-black">Manage, track, and optimize your expenses effortlessly.</p>
           <div className="flex justify-start gap-4">
             <Link
